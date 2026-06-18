@@ -183,7 +183,7 @@ export function loadConfig(): Config {
     bindFromEnvRaw && BIND_MODES.includes(bindFromEnvRaw as BindMode)
       ? (bindFromEnvRaw as BindMode)
       : null;
-  const configuredHost = process.env.HOST ?? fileConfig?.server.host ?? "0.0.0.0";
+  const configuredHost = process.env.HOST ?? fileConfig?.server.host ?? "127.0.0.1";
   const tailnetBindHost = detectTailnetBindHost();
   const bind =
     bindFromEnv ??

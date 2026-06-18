@@ -84,7 +84,7 @@ function headersFromExpressRequest(req: Request): Headers {
 }
 
 export function deriveAuthTrustedOrigins(config: Config, opts?: { listenPort?: number }): string[] {
-  const baseUrl = config.authBaseUrlMode === "explicit" ? config.authPublicBaseUrl : undefined;
+  const baseUrl = config.authPublicBaseUrl || undefined;
   const trustedOrigins = new Set<string>();
 
   if (baseUrl) {
@@ -113,7 +113,7 @@ export function deriveAuthTrustedOrigins(config: Config, opts?: { listenPort?: n
 }
 
 export function createBetterAuthInstance(db: Db, config: Config, trustedOrigins: string[]): BetterAuthInstance {
-  const baseUrl = config.authBaseUrlMode === "explicit" ? config.authPublicBaseUrl : undefined;
+  const baseUrl = config.authPublicBaseUrl || undefined;
   const publicUrl = process.env.PAPERCLIP_PUBLIC_URL?.trim() || baseUrl;
   const secret = process.env.BETTER_AUTH_SECRET ?? process.env.PAPERCLIP_AGENT_JWT_SECRET;
   if (!secret) {

@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import path from "node:path";
 import fs from "node:fs";
 import pino from "pino";
@@ -6,6 +7,10 @@ import { readConfigFile } from "../config-file.js";
 import { resolveDefaultLogsDir, resolveHomeAwarePath } from "../home-paths.js";
 import { shouldSilenceHttpSuccessLog } from "./http-log-policy.js";
 import { redactSensitive } from "./redact-sensitive.js";
+
+const require = createRequire(import.meta.url);
+const pinoPrettyPath = require.resolve("pino-pretty");
+const pinoRollPath = require.resolve("pino-roll");
 
 function resolveServerLogDir(): string {
   const envOverride = process.env.PAPERCLIP_LOG_DIR?.trim();
@@ -34,12 +39,12 @@ export const logger = pino({
 }, pino.transport({
   targets: [
     {
-      target: "pino-pretty",
+      target: pinoPrettyPath,
       options: { ...sharedOpts, ignore: "pid,hostname,req,res,responseTime", colorize: true, destination: 1 },
       level: "info",
     },
     {
-      target: "pino-roll",
+      target: pinoRollPath,
       options: {
         file: logFileBase,
         extension: ".log",

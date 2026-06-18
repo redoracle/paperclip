@@ -82,4 +82,10 @@ describe("company routes", () => {
     // Already-prefixed paths are returned untouched.
     expect(applyCompanyPrefix("/PAP/artifacts", "PAP")).toBe("/PAP/artifacts");
   });
+
+  it("treats memories as a company board route", () => {
+    expect(isBoardPathWithoutPrefix("/memories")).toBe(true);
+    expect(extractCompanyPrefixFromPath("/memories")).toBeNull();
+    expect(applyCompanyPrefix("/memories", "PAP")).toBe("/PAP/memories");
+  });
 });

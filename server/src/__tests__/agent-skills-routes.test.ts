@@ -565,7 +565,6 @@ describe.sequential("agent skill routes", () => {
       }),
     );
     expect(mockTrackAgentCreated).toHaveBeenCalledWith(
-      expect.anything(),
       expect.objectContaining({
         agentId: createdAgentId,
         agentRole: "engineer",
@@ -595,7 +594,6 @@ describe.sequential("agent skill routes", () => {
       }),
     );
     expect(mockTrackAgentCreated).toHaveBeenCalledWith(
-      expect.anything(),
       expect.objectContaining({
         agentId: createdAgentId,
         agentRole: "security",

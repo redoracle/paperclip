@@ -19,7 +19,11 @@ import {
 import { trackSkillImported } from "@paperclipai/shared/telemetry";
 import { validate } from "../middleware/validate.js";
 import { accessService, agentService, companySkillService, logActivity } from "../services/index.js";
-import { getCatalogSkillOrThrow, listCatalogSkills, readCatalogSkillFile } from "../services/skills-catalog.js";
+import {
+  getCatalogSkillOrThrow,
+  listCatalogSkillsOrEmpty,
+  readCatalogSkillFile,
+} from "../services/skills-catalog.js";
 import { forbidden } from "../errors.js";
 import { assertAuthenticated, assertCompanyAccess, getActorInfo } from "./authz.js";
 
@@ -120,7 +124,7 @@ export function companySkillRoutes(db: Db) {
       category: firstQueryString(req.query.category),
       q: firstQueryString(req.query.q),
     });
-    res.json(listCatalogSkills(query));
+    res.json(listCatalogSkillsOrEmpty(query));
   });
 
   router.get("/skills/catalog/:catalogId/files", async (req, res) => {

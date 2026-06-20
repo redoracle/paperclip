@@ -5,6 +5,7 @@ import type { Db } from "@paperclipai/db";
 import { healthRoutes } from "../routes/health.js";
 import * as devServerStatus from "../dev-server-status.js";
 import { serverVersion } from "../version.js";
+import { buildInfo } from "../build-info.js";
 
 const mockReadPersistedDevServerStatus = vi.hoisted(() => vi.fn());
 
@@ -32,7 +33,7 @@ describe("GET /health", () => {
     const app = createApp();
     const res = await request(app).get("/health");
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ status: "ok", version: serverVersion });
+    expect(res.body).toEqual({ status: "ok", version: serverVersion, ...buildInfo });
   }, 15_000);
 
   it("returns 200 when the database probe succeeds", async () => {
@@ -45,7 +46,7 @@ describe("GET /health", () => {
 
     expect(res.status).toBe(200);
     expect(db.execute).toHaveBeenCalledTimes(1);
-    expect(res.body).toMatchObject({ status: "ok", version: serverVersion });
+    expect(res.body).toMatchObject({ status: "ok", version: serverVersion, ...buildInfo });
   });
 
   it("returns 503 when the database probe fails", async () => {
@@ -60,7 +61,37 @@ describe("GET /health", () => {
     expect(res.body).toEqual({
       status: "unhealthy",
       version: serverVersion,
-      error: "database_unreachable"
+      ...buildInfo,
+      error: "database_unreachable",
+    });
+  });
+
+  it("redacts detailed metadata for anonymous authenticated-mode database failures", async () => {
+    const db = {
+      execute: vi.fn().mockRejectedValue(new Error("connect ECONNREFUSED")),
+    } as unknown as Db;
+    const app = express();
+    app.use((req, _res, next) => {
+      (req as any).actor = { type: "none", source: "none" };
+      next();
+    });
+    app.use(
+      "/health",
+      healthRoutes(db, {
+        deploymentMode: "authenticated",
+        deploymentExposure: "public",
+        authReady: true,
+        companyDeletionEnabled: false,
+      }),
+    );
+
+    const res = await request(app).get("/health");
+
+    expect(res.status).toBe(503);
+    expect(res.body).toEqual({
+      status: "unhealthy",
+      deploymentMode: "authenticated",
+      error: "database_unreachable",
     });
   });
 
@@ -171,6 +202,7 @@ describe("GET /health", () => {
     expect(res.body).toMatchObject({
       status: "ok",
       version: serverVersion,
+      ...buildInfo,
       deploymentMode: "authenticated",
       deploymentExposure: "public",
       authReady: true,

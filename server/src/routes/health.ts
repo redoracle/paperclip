@@ -8,6 +8,7 @@ import { readPersistedDevServerStatus, toDevServerHealthStatus, writeDevServerRe
 import { logger } from "../middleware/logger.js";
 import { instanceSettingsService } from "../services/instance-settings.js";
 import { serverVersion } from "../version.js";
+import { buildInfo } from "../build-info.js";
 
 function shouldExposeFullHealthDetails(
   actorType: "none" | "board" | "agent" | null | undefined,
@@ -90,7 +91,7 @@ export function healthRoutes(
     if (!db) {
       res.json(
         exposeFullDetails
-          ? { status: "ok", version: serverVersion }
+          ? { status: "ok", version: serverVersion, ...buildInfo }
           : { status: "ok", deploymentMode: opts.deploymentMode },
       );
       return;
@@ -100,11 +101,20 @@ export function healthRoutes(
       await db.execute(sql`SELECT 1`);
     } catch (error) {
       logger.warn({ err: error }, "Health check database probe failed");
-      res.status(503).json({
-        status: "unhealthy",
-        version: serverVersion,
-        error: "database_unreachable"
-      });
+      res.status(503).json(
+        exposeFullDetails
+          ? {
+              status: "unhealthy",
+              version: serverVersion,
+              ...buildInfo,
+              error: "database_unreachable",
+            }
+          : {
+              status: "unhealthy",
+              deploymentMode: opts.deploymentMode,
+              error: "database_unreachable",
+            },
+      );
       return;
     }
 
@@ -168,6 +178,7 @@ export function healthRoutes(
     res.json({
       status: "ok",
       version: serverVersion,
+      ...buildInfo,
       deploymentMode: opts.deploymentMode,
       deploymentExposure: opts.deploymentExposure,
       authReady: opts.authReady,
